@@ -68,6 +68,7 @@ jobs:
         SMTP_USER: ${{ secrets.SMTP_USER }}
         SMTP_PASS: ${{ secrets.SMTP_PASS }}
         TO_EMAIL: ${{ secrets.TO_EMAIL }}
+  
   deploy:
     needs: test
     runs-on: windows-latest
