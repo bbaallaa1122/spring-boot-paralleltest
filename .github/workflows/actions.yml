@@ -31,16 +31,16 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           TO_EMAIL: ${{ secrets.TO_EMAIL }}
-  test: null
-  needs: lint
-  runs-on: windows-latest
-  strategy:
+  test: 
+   needs: lint
+   runs-on: windows-latest
+   strategy:
     matrix:
       node:
         - 1
         - 2
         - 3
-  steps:
+   steps:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Set up JDK 17
