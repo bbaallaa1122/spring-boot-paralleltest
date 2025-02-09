@@ -1,6 +1,9 @@
 name: Build and Release JAR
 on:
   push:
+    tags:
+      - v*
+
 jobs:
   build:
     runs-on: windows-latest
@@ -17,5 +20,4 @@ jobs:
       - name: Upload JAR to Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v1.0.${{ github.run_number }}
           files: target/*.jar
