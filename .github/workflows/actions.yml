@@ -1,5 +1,8 @@
 name: Build and Release JAR
-on: push
+on:
+  push:
+    tags:
+      - v*
 jobs:
   build:
     runs-on: windows-latest
