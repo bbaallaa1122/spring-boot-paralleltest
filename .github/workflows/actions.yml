@@ -1,104 +1,19 @@
-name: test_deploy
+name: Build and Release JAR
 on: push
 jobs:
-  lint:
+  build:
     runs-on: windows-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: "17"
-      - name: Lint Code with Checkstyle
-        run: mvn checkstyle:check
-      - name: Send Email on Failure
-        if: failure()
-        run: >
-          if (Test-Path ".\mailsend-go.exe") {
-            .\mailsend-go.exe -smtp $SMTP_SERVER -port $SMTP_PORT -auth -user $SMTP_USER -pass $SMTP_PASS `
-              -from $SMTP_USER -to $TO_EMAIL -sub "Lint Check Failed in GitHub Actions" `
-              -M "The lint check failed in GitHub Actions. Please check the logs."
-          } else {
-            echo "mailsend-go.exe not found!"
-            exit 1
-          }
-        shell: pwsh
-        env:
-          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          TO_EMAIL: ${{ secrets.TO_EMAIL }}
-  test: 
-   needs: lint
-   runs-on: windows-latest
-   strategy:
-    matrix:
-      node:
-        - 1
-        - 2
-        - 3
-   steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        distribution: temurin
-        java-version: "17"
-    - name: Run Tests in Parallel with Knapsack-Pro
-      run: mvn test "-Dknapsack.split=${{ matrix.node }}"
-    - name: Send Email on Failure
-      if: failure()
-      run: >
-        if (Test-Path ".\mailsend-go.exe") {
-          .\mailsend-go.exe -smtp $SMTP_SERVER -port $SMTP_PORT -auth -user $SMTP_USER -pass $SMTP_PASS `
-            -from $SMTP_USER -to $TO_EMAIL -sub "Test Failed in GitHub Actions" `
-            -M "The tests failed in GitHub Actions. Please check the logs."
-        } else {
-          echo "mailsend-go.exe not found!"
-          exit 1
-        }
-      shell: pwsh
-      env:
-        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
-        SMTP_PORT: ${{ secrets.SMTP_PORT }}
-        SMTP_USER: ${{ secrets.SMTP_USER }}
-        SMTP_PASS: ${{ secrets.SMTP_PASS }}
-        TO_EMAIL: ${{ secrets.TO_EMAIL }}
-  
-  deploy:
-    needs: test
-    runs-on: windows-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - name: Build JAR with Maven
+        run: mvn clean package
+      - name: Upload JAR to Release
+        uses: softprops/action-gh-release@v1
         with:
-          distribution: temurin
-          java-version: "17"
-      - name: Build Application
-        run: mvn clean package -DskipTests
-      - name: Deploy Application
-        run: echo "Deploying application... (insert your deployment commands here)"
-      - name: Send Email on Failure
-        if: failure()
-        run: >
-          if (Test-Path ".\mailsend-go.exe") {
-            .\mailsend-go.exe -smtp $SMTP_SERVER -port $SMTP_PORT -auth -user $SMTP_USER -pass $SMTP_PASS `
-              -from $SMTP_USER -to $TO_EMAIL -sub "Deployment Failed in GitHub Actions" `
-              -M "The deployment failed in GitHub Actions. Please check the logs."
-          } else {
-            echo "mailsend-go.exe not found!"
-            exit 1
-          }
-        shell: pwsh
-        env:
-          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          TO_EMAIL: ${{ secrets.TO_EMAIL }}
+          files: target/*.jar
